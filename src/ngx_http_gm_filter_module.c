@@ -95,7 +95,7 @@ ngx_module_t  ngx_http_gm_module = {
     NGX_MODULE_V1_PADDING
 };
 
-static ngx_str_t  ngx_http_comp_len = ngx_string("comp_len");
+static ngx_str_t  ngx_http_gm_original_len = ngx_string("gm_original_len");
 
 static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
 static ngx_http_output_body_filter_pt    ngx_http_next_body_filter;
@@ -727,7 +727,6 @@ ngx_http_gm_original_length(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    //v->len = ctx->length;
     v->len = ngx_sprintf(v->data, "%ui", ctx->length) - v->data;
 
     return NGX_OK;
@@ -739,7 +738,7 @@ ngx_http_gm_add_variables(ngx_conf_t *cf)
 {
     ngx_http_variable_t  *var;
 
-    var = ngx_http_add_variable(cf, &ngx_http_comp_len, NGX_HTTP_VAR_NOHASH);
+    var = ngx_http_add_variable(cf, &ngx_http_gm_original_len, NGX_HTTP_VAR_NOHASH);
     if (var == NULL) {
         return NGX_ERROR;
     }
