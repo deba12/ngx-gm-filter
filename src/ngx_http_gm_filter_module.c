@@ -34,6 +34,8 @@ static ngx_int_t ngx_http_gm_init(ngx_conf_t *cf);
 static ngx_int_t ngx_http_gm_init_worker(ngx_cycle_t *cycle);
 static void ngx_http_gm_exit_worker(ngx_cycle_t *cycle);
 
+static ngx_int_t ngx_http_gm_add_variables(ngx_conf_t *cf);
+
 
 static ngx_command_t  ngx_http_gm_commands[] = {
 
@@ -64,7 +66,7 @@ static ngx_command_t  ngx_http_gm_commands[] = {
 
 
 static ngx_http_module_t  ngx_http_gm_module_ctx = {
-    NULL,                        /* preconfiguration */
+    ngx_http_gm_add_variables, /* preconfiguration */
     ngx_http_gm_init,            /* postconfiguration */
 
     NULL,                        /* create main configuration */
@@ -93,6 +95,7 @@ ngx_module_t  ngx_http_gm_module = {
     NGX_MODULE_V1_PADDING
 };
 
+static ngx_str_t  ngx_http_comp_len = ngx_string("comp_len");
 
 static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
 static ngx_http_output_body_filter_pt    ngx_http_next_body_filter;
@@ -701,4 +704,50 @@ ngx_http_gm_init(ngx_conf_t *cf)
 
     return NGX_OK;
 }
+
+static ngx_int_t
+ngx_http_gm_original_length(ngx_http_request_t *r,
+    ngx_http_variable_value_t *v, uintptr_t data)
+{
+    ngx_http_gm_ctx_t  *ctx;
+
+    v->valid = 1;
+    v->no_cacheable = 0;
+    v->not_found = 0;
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_gm_module);
+
+    if (ctx == NULL || ctx->length == 0) {
+        v->not_found = 1;
+        return NGX_OK;
+    }
+
+    v->data = ngx_pnalloc(r->pool, NGX_INT32_LEN + 3);
+    if (v->data == NULL) {
+        return NGX_ERROR;
+    }
+
+    //v->len = ctx->length;
+    v->len = ngx_sprintf(v->data, "%ui", ctx->length) - v->data;
+
+    return NGX_OK;
+}
+
+
+static ngx_int_t
+ngx_http_gm_add_variables(ngx_conf_t *cf)
+{
+    ngx_http_variable_t  *var;
+
+    var = ngx_http_add_variable(cf, &ngx_http_comp_len, NGX_HTTP_VAR_NOHASH);
+    if (var == NULL) {
+        return NGX_ERROR;
+    }
+
+    var->get_handler = ngx_http_gm_original_length;
+
+    return NGX_OK;
+}
+
+
 
