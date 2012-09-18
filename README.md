@@ -21,7 +21,9 @@ Synopsis
 
 server {
     gm_buffer 10M;
-
+#log length difference
+    log_format  comp '$time_iso8601	$gm_original_len        $body_bytes_sent';
+    access_log /var/log/nginx/comp.log comp;
     location /gm {
          alias imgs;
 
