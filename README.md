@@ -33,6 +33,12 @@ server {
 
          gm_image_quality 85;
     }
+# strip images from metadata
+    location /strip {
+	gm_image_quality 99;
+	gm_buffer 10M;
+	gm convert strip;
+    }
 }
 
 
